@@ -2,11 +2,84 @@
 <html lang="en">
 <head>
 
+	<link rel="StyleSheet" href="resources/leaflet.css" type="text/css" />
+	<link rel="StyleSheet" href="resources/L.markercluster.css" type="text/css" />
+	<link rel="StyleSheet" href="resources/L.markercluster.default.css" type="text/css" />
+	<link rel="StyleSheet" href="resources/leaflet.draw.css" type="text/css" />
+	<link rel="StyleSheet" href="resources/style.css" type="text/css" />
+	<script type="text/javascript" src="resources/stuquery.js"></script>
+	<script type="text/javascript" src="resources/leaflet.js"></script>
+	<script type="text/javascript" src="resources/leaflet.markercluster-src.js"></script>
+	<script>
+	S(document).ready(function(){
+	
+		console.log('test');
+		baseMaps = {};
+		// Default maps
+		baseMaps['Greyscale'] = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+			attribution: 'Tiles: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+			subdomains: 'abcd',
+			maxZoom: 19
+		});
+		baseMaps['Open Street Map'] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		});
+		baseMaps['CartoDB Voyager (no labels)'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+			subdomains: 'abcd',
+			maxZoom: 19
+		});
+		baseMaps['CartoDB Voyager'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+			subdomains: 'abcd',
+			maxZoom: 19
+		});
 
+		id = 'map';
+
+		var mapel = S('#'+id);
+		var map = L.map(id,{'layers':[baseMaps['Greyscale']],'scrollWheelZoom':true,'zoomControl': true}).setView([15,0.1], 2);
+
+		//new L.Control.Zoom({ position: 'topright' }).addTo(map);
+		if(Object.keys(baseMaps).length > 1){ var control = L.control.layers(baseMaps); control.addTo(map); }
+
+		S().ajax("telescopes.csv",{
+			"dataType": "text/csv",			
+			"success": function(d){
+				console.log(d);
+			}
+		});
+
+		S().ajax("https://strudel.org.uk/cgi-bin/obsstatus.pl",{
+			"dataType": "text/csv",
+			"success": function(d){
+				console.log(parseCSV(d));
+			}
+		});
+
+	});
+	
+	function parseCSV(d){
+		d = d.split(/[\n\r]/);
+		var data,l,c,cols;
+		var data = new Array(d.length-1);
+		for(l = 0; l < d.length; l++){
+			cols = d[l].split(/,(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))/);
+			if(l == 0) header = cols;
+			else{
+				datum = {};
+				for(c = 0; c < cols.length; c++) datum[header[c]] = cols[c].replace(/(^\"|\"$)/g,"");
+				data[l-1] = datum;
+			}
+		}
+		return data;
+	}
+	</script>
 </head>
 <body>
+	<h1>Observatory status</h1>
 
-
-
+	<div id="map"></div>
 </body>
 </html>
